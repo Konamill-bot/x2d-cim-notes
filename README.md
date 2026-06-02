@@ -22,10 +22,12 @@ Verified from Hasselblad's published specifications and DPReview / Capture Integ
 | --------------------- | --------------- | ---------------------------- |
 | Sensor                | 100MP BSI CMOS  | 100MP BSI CMOS (same)        |
 | Sensor size           | 43.8 × 32.9mm   | 43.8 × 32.9mm (same)         |
+| Color depth           | 16-bit          | 16-bit (same)                |
 | Dynamic range         | 15 stops        | 15.3 stops                   |
 | Native ISO            | 64–25600        | 50–25600                     |
+| HNCS color science    | yes             | HNCS HDR                     |
 | **PDAF zones**        | **294**         | **425** (+44%)               |
-| **CDAF**              | none            | added                        |
+| **CDAF**              | **yes**         | **yes** (same)               |
 | **LiDAR module**      | none            | added                        |
 | **AI subject detect** | none            | human/vehicle/cat/dog        |
 | **AF illuminator**    | none            | added                        |
@@ -33,26 +35,38 @@ Verified from Hasselblad's published specifications and DPReview / Capture Integ
 | **AF-C**              | not exposed     | yes, with V/P/E lenses       |
 | Body firmware (latest)| 4.2.0           | 1.2.7.x                      |
 
-The X2D II's AF improvements are real hardware: a new PDAF sensor with more zones, a physical
-LiDAR module, an AI inference accelerator. These are not unlockable on X2D — the silicon isn't
-there.
+> Source: Hasselblad's own published specification comparison.
 
-**The harder question** is whether the X2D body has sufficient image processing pipeline
-bandwidth to do even a basic AF-C at all. The strongest external evidence that pipeline
-throughput, not PDAF count, may be the binding constraint:
+Both bodies have **PDAF + CDAF hybrid autofocus**. The X2D II's AF improvements over X2D are:
+LiDAR module, AI subject detection accelerator, AF illuminator, and a higher-zone-count PDAF
+sensor. These add up to faster, more accurate, more situationally-robust autofocus — but
+the **fundamental AF detection capability (PDAF + CDAF)** is the same on both bodies.
 
-| Camera                | Sensor       | PDAF | Burst rate | AF-C  |
-| --------------------- | ------------ | ---- | ---------- | ----- |
-| Sony A6000 (2014)     | APS-C 24MP   | 179  | 11 fps     | yes   |
-| Sony A7 III (2018)    | FF 24MP      | 693  | 10 fps     | yes   |
-| **X2D 100C (2022)**   | **MF 100MP** | **294** | **3.3 fps** | **no** |
-| **X2D II 100C (2025)**| **MF 100MP** | **425** | **4.5 fps** | **yes** |
+This is significant because PDAF + CDAF is the autofocus architecture that enables AF-C on
+essentially every modern mirrorless camera that has it. LiDAR is not required for AF-C:
 
-The X2D's 3.3 fps burst rate is several times slower than 2014-era APS-C — entirely consistent
-with a sensor-readout / ISP throughput limit imposed by handling 100 MP per frame. The X2D II's
-combined upgrade (425 PDAF + 4.5 fps + AF-C) plausibly reflects a single underlying improvement:
-faster sensor readout and ISP. If so, the X2D's silicon may genuinely lack the throughput to
-support continuous AF at acceptable refresh rates, regardless of PDAF zone count.
+| Camera                | AF detection      | LiDAR | Burst rate | AF-C  |
+| --------------------- | ----------------- | ----- | ---------- | ----- |
+| Sony A7 III (2018)    | PDAF (693) + CDAF | no    | 10 fps     | yes   |
+| Canon EOS R5 (2020)   | Dual Pixel (PDAF + CDAF) | no | 12 fps | yes   |
+| Fujifilm X-T4 (2020)  | PDAF + CDAF       | no    | 15 fps     | yes   |
+| **X2D 100C (2022)**   | **PDAF (294) + CDAF** | **no** | **3.3 fps** | **no** |
+| **X2D II 100C (2025)**| **PDAF (425) + CDAF + LiDAR** | **yes** | **4.5 fps** | **yes** |
+
+The X2D's AF detection architecture (PDAF + CDAF) is identical in kind to every modern
+mirrorless camera that supports AF-C. It is not architecturally limited by the absence of
+LiDAR — the cameras above achieve AF-C without LiDAR.
+
+**The remaining open question** is whether the X2D's image processor pipeline has the
+throughput to do AF-C at all. The strongest external evidence that pipeline throughput, not
+AF detection capability, may be the binding constraint is the burst rate:
+
+The X2D's 3.3 fps burst rate is several times slower than full-frame mirrorless competitors
+with comparable PDAF + CDAF systems — entirely consistent with a sensor-readout / ISP
+throughput limit imposed by handling 100 MP per frame. The X2D II's combined upgrade
+(425 PDAF + LiDAR + 4.5 fps + AF-C) plausibly reflects a meaningful pipeline-throughput
+improvement. If so, the X2D's silicon may genuinely lack the throughput to support continuous
+AF at acceptable refresh rates, regardless of having PDAF + CDAF AF detection.
 
 This means the situation may be one of the following, and **we cannot tell from outside which**:
 
