@@ -73,7 +73,7 @@ camera via USB or WiFi without buffering them.
 The decryption key, the decryption logic, and the signature verification all live inside
 the X2D's SoC secure storage. This is good security design — it means extracting Phocus
 or reverse-engineering it cannot yield the firmware key. The downside (for researchers) is
-that there is no software-side attack surface to exploit.
+that there is no externally-accessible decryption path through Phocus.
 
 ## What this rules out
 
