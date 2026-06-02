@@ -6,7 +6,7 @@
 
 The Hasselblad X2D 100C uses a `.cim` firmware file format that is **AES-128 ECB encrypted** with a key residing in the camera SoC (not in Phocus software). No software-only attack from a PC is feasible.
 
-**The hardware difference between X2D and X2D II is real** — different PDAF design (294 vs 425 zones), added LiDAR, added CDAF, new AI processor, faster IBIS. X2D will never match X2D II's autofocus performance, and Hasselblad's silicon investments are visible.
+**The hardware difference between X2D and X2D II is real** — different PDAF design (294 vs 425 zones), added LiDAR, added AI subject-detection accelerator, added AF illuminator, faster IBIS. X2D will never match X2D II's autofocus performance, and Hasselblad's silicon investments are visible. (Note: both bodies have PDAF + CDAF hybrid autofocus — that part is shared. LiDAR and the AI accelerator are what's new.)
 
 **The remaining open question** is whether the X2D's image processor pipeline has the throughput to support even a *basic* AF-C mode, given the camera's 3.3 fps burst rate (substantially slower than 2014-era APS-C cameras that offered AF-C). The X2D's 294-point PDAF count and V-series lens motors are sufficient on paper, but continuous AF additionally requires the sensor + ISP to read PDAF data and drive the lens motor 30–60 times per second while maintaining live view. The X2D's pipeline may not be fast enough for this even though its PDAF count is adequate. Whether Hasselblad's decision not to ship AF-C is a *silicon-cannot* judgment or a *policy-will-not* choice is not externally determinable.
 
