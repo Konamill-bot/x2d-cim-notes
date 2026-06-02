@@ -84,29 +84,28 @@ that there is no software-side attack surface to exploit.
 - Modified Phocus.dll to inject AFC capability: **not useful** (the camera enforces
   capabilities, not Phocus)
 
-## What this leaves open
+## Where the security boundary lies
 
-The only attack surface is the **X2D SoC itself**, accessed through:
-- Hardware debug ports (likely fused off in production)
-- Voltage/clock glitching of the bootloader's signature verification
-- Side-channel power analysis of the decryption routine
-- Direct chip-off and OTP fuse readout
+The decryption key, decryption logic, and signature verification all reside inside the
+X2D's SoC. From a PC-side software perspective, there is no accessible path to the key.
+This is the conclusion of the investigation — Hasselblad's firmware protection is intact,
+and this researcher considers it appropriate for the platform.
 
-All require physical access, specialized equipment, and significant skill.
+## Non-circumvention research directions (for documentation purposes only)
 
-## What could potentially help, if anyone wants to keep trying
+Future researchers interested in understanding the CIM format better, without any attempt
+to break or circumvent Hasselblad's security, might consider:
 
-1. **Hook Phocus's WiFi/USB write calls** during a firmware update. Capture the byte stream
-   with Wireshark or USBPcap and compare to the original CIM file. If they differ, Phocus
-   is doing some transformation worth examining.
+1. **Cross-version structural diff.** Byte-level comparison of CIMs across firmware
+   versions can localize which regions of the encrypted payload changed in each release.
+   This reveals structural information without decryption.
 
-2. **Trigger Phocus to actually load the CIM.** Our scans showed it doesn't read the file
-   when the user clicks "Open" if the camera is on the same firmware version. Tests worth
-   running: modify the plaintext version string in the CIM header to fake a newer version;
-   disconnect the camera before clicking Open.
+2. **Cross-product structural diff.** Comparison of X2D vs X2D II CIMs (both freely
+   distributed by Hasselblad) may yield insight into how their firmware structures differ.
 
-3. **Cross-version diff.** Obtain CIMs from multiple firmware versions. Byte-level diff
-   localizes regions that changed.
+3. **Network-level observation of an update flow** with standard tools (Wireshark, USBPcap)
+   to confirm that Phocus transmits the CIM unchanged. This documents Phocus's transport-only
+   role and adds nothing not already inferred from this investigation.
 
-4. **Public CIM archive.** Anonymized collection of versions (no keys) would accelerate
-   research without legal exposure (the files are freely distributed by Hasselblad).
+None of these directions require, suggest, or enable any circumvention of Hasselblad's
+security. They are descriptive structural analysis, not attack.

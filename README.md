@@ -10,7 +10,7 @@ The Hasselblad X2D 100C uses a `.cim` firmware file format that is **AES-128 ECB
 
 **The remaining open question** is whether the X2D's image processor pipeline has the throughput to support even a *basic* AF-C mode, given the camera's 3.3 fps burst rate (substantially slower than 2014-era APS-C cameras that offered AF-C). The X2D's 294-point PDAF count and V-series lens motors are sufficient on paper, but continuous AF additionally requires the sensor + ISP to read PDAF data and drive the lens motor 30–60 times per second while maintaining live view. The X2D's pipeline may not be fast enough for this even though its PDAF count is adequate. Whether Hasselblad's decision not to ship AF-C is a *silicon-cannot* judgment or a *policy-will-not* choice is not externally determinable.
 
-**Practical conclusion:** Hasselblad would have to ship AF-C — or transparently explain why they will not — via official firmware or formal communication. There is no community jailbreak path without hardware attack on the SoC.
+**Practical conclusion:** Hasselblad would have to ship AF-C — or transparently explain why they will not — via official firmware or formal communication. There is no externally-available software path to enable AF-C; the firmware encryption is intact, and the camera enforces capability gating on its own side.
 
 ---
 
@@ -149,19 +149,14 @@ magic matches.
 
 Interpretation: Hasselblad maintains independent crypto infrastructure post-DJI-acquisition.
 
-## What you would need to actually break this
+## Conclusion of the software investigation
 
-Software-only attack from a PC: **not viable**. The key is in the X2D's SoC secure storage.
+Software-only attack from a PC is **not viable**. The encryption key resides inside the
+X2D's SoC, not in any PC-side software. Phocus is a pure transport. The camera enforces
+its own capability gating. This is a well-designed security architecture, and this
+investigation cannot proceed further along software-only lines.
 
-Hardware attack surface:
-1. JTAG / UART (likely fused off in production)
-2. Voltage / clock glitching of bootloader signature check (~$1k–$3k, weeks of effort)
-3. Side-channel power analysis (academic instrumentation)
-4. Chip-off + decapping + electron microscope (lab-grade, $50k+)
-
-Estimated effort for success: 6–18 months of focused work, significant chance of failure.
-
-## What didn't work (don't waste your time)
+## What didn't work (and why future researchers shouldn't repeat these)
 
 - ❌ Sending `ipcFocusMode=2` via Phocus IPC (camera ignores)
 - ❌ Direct `CCameraToolController.SetFocusMode(2)` via .NET reflection (same result)
@@ -170,19 +165,31 @@ Estimated effort for success: 6–18 months of focused work, significant chance 
 - ❌ Full Phocus process memory scan (~3.8 GB scanned, no key material)
 - ❌ XOR-with-rolling-key hypothesis (output remained high-entropy)
 
-## Suggested approaches for future research
+## The only path forward, in this researcher's opinion
 
-1. **Cross-version diff.** Obtain CIMs from multiple X2D firmware versions. Byte-level diff
-   localizes regions that changed — useful for prioritizing future hardware attacks.
+The most realistic path for X2D owners who want AF-C is **direct engagement with Hasselblad**:
 
-2. **Cross-product diff.** Compare X2D vs X2D II CIM if obtainable. If the SoC platform is
-   shared, the difference may localize the AFC enablement bytes.
+1. **File a formal feature request with Hasselblad.** Gather V-lens X2D owners, present the
+   evidence that PDAF + CDAF hybrid AF systems support continuous AF on every comparable
+   camera in the market, and respectfully request basic AF-C as a firmware update — paid
+   or free.
 
-3. **Cooperate with academic side-channel researchers.** Korea's KAERI published the
-   PUEK-2017-09 DJI key in November 2025 and might be interested in adjacent camera platforms.
+2. **Ask Hasselblad to clarify the architectural question publicly.** Whether the X2D's
+   image processor pipeline can sustain continuous AF or not is something only Hasselblad
+   knows. Owners would benefit from a direct answer.
 
-4. **File a formal feature request with Hasselblad.** The highest-probability path: gather
-   V-lens X2D owners, present the evidence, and request basic AF-C as a firmware update.
+Other research paths that future investigators might consider (none involving any attempt
+to circumvent Hasselblad's security):
+
+- **Cross-version diff.** Byte-level comparison of CIMs across firmware versions can
+  localize which regions of the firmware changed in each release, without decrypting them.
+  Useful as a structural mapping exercise.
+- **Cross-product diff.** Comparison of X2D vs X2D II CIMs (both freely distributed by
+  Hasselblad) may yield insight into how their firmware structures differ.
+
+This investigation does not pursue, recommend, or suggest any attack on Hasselblad's
+hardware or security infrastructure. The author considers Hasselblad's firmware protection
+appropriate for a premium camera platform, and this repo is closed on the technical side.
 
 ## Repository structure
 
