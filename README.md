@@ -237,6 +237,10 @@ Documentation under CC BY-SA 4.0. Diagnostic tool source code under MIT License.
 
 - DJI firmware tools community ([o-gs/dji-firmware-tools](https://github.com/o-gs/dji-firmware-tools))
   for prior art that made the key cross-reference test possible
-- Anthropic Claude for collaborative research assistance
 - Hasselblad themselves for clear specification publishing that made the hardware comparison
   possible — and the request reasonable
+- Claude (Anthropic) — used as a sounding board during analysis. All experimental setups,
+  decisions to pursue or abandon each line of investigation, the choice of negative-result
+  framing, and the editorial structure of this repo are original work by the author.
+  Tool source code, observed measurements, file format observations, and the conclusions
+  drawn from them are mine.
