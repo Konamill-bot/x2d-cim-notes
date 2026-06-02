@@ -1,0 +1,19 @@
+# Never commit firmware files
+*.cim
+*.CIM
+*.bin
+dumps/
+
+# Build artifacts
+*.exe
+*.dll
+*.pdb
+bin/
+obj/
+
+# Local env
+.vscode/
+.idea/
+*.swp
+__pycache__/
+*.pyc
