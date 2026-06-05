@@ -45,21 +45,44 @@ the **fundamental AF detection capability (PDAF + CDAF)** is the same on both bo
 This is significant because PDAF + CDAF is the autofocus architecture that enables AF-C on
 essentially every modern mirrorless camera that has it. LiDAR is not required for AF-C:
 
-| Camera                | AF detection      | LiDAR | Burst rate | AF-C  |
-| --------------------- | ----------------- | ----- | ---------- | ----- |
-| Sony A7 III (2018)    | PDAF (693) + CDAF | no    | 10 fps     | yes   |
-| Canon EOS R5 (2020)   | Dual Pixel (PDAF + CDAF) | no | 12 fps | yes   |
-| Fujifilm X-T4 (2020)  | PDAF + CDAF       | no    | 15 fps     | yes   |
-| **X2D 100C (2022)**   | **PDAF (294) + CDAF** | **no** | **3.3 fps** | **no** |
-| **X2D II 100C (2025)**| **PDAF (425) + CDAF + LiDAR** | **yes** | **4.5 fps** | **yes** |
+| Camera                       | AF detection                     | LiDAR | Burst rate | AF-C  |
+| ---------------------------- | -------------------------------- | ----- | ---------- | ----- |
+| Sony A7 III (2018)           | PDAF (693) + CDAF                | no    | 10 fps     | yes   |
+| Canon EOS R5 (2020)          | Dual Pixel (PDAF + CDAF)         | no    | 12 fps     | yes   |
+| Fujifilm X-T4 (2020)         | PDAF + CDAF                      | no    | 15 fps     | yes   |
+| **X2D 100C (2022)**          | **PDAF (294) + CDAF**            | **no**  | **3.3 fps** | **no**  |
+| **Fujifilm GFX 100 II (2023)** | **PDAF + CDAF + subject detect** | **no**  | **8 fps**   | **yes** |
+| **X2D II 100C (2025)**       | **PDAF (425) + CDAF + LiDAR**    | **yes** | **4.5 fps** | **yes** |
 
 The X2D's AF detection architecture (PDAF + CDAF) is identical in kind to every modern
 mirrorless camera that supports AF-C. It is not architecturally limited by the absence of
 LiDAR — the cameras above achieve AF-C without LiDAR.
 
-**The remaining open question** is whether the X2D's image processor pipeline has the
-throughput to do AF-C at all. The strongest external evidence that pipeline throughput, not
-AF detection capability, may be the binding constraint is the burst rate:
+The most directly comparable entry in the table above is the **Fujifilm GFX 100 II (2023)**.
+Both it and the X2D 100C use a 100MP, 43.8 × 32.9 mm sensor. Both lack LiDAR. They were
+released roughly a year apart. The GFX 100 II ships AF-C with subject detection (including
+Eye AF) at 8 fps burst, and reviews at launch described it as "the best autofocus system
+ever seen in a medium format camera."
+
+This is external observation from a competitor's published specifications, not internal
+Hasselblad confirmation, but the implications are concrete:
+
+- **A 100 MP sensor in a 43.8 × 32.9 mm format is not a barrier to AF-C.** Fujifilm
+  demonstrates this with the GFX 100 II.
+- **LiDAR is not a prerequisite for AF-C in medium format.** Fujifilm again demonstrates this.
+- The difference between the X2D 100C and the GFX 100 II appears to be **AF algorithm
+  engineering investment**, not a sensor or format limitation.
+
+This does not prove the X2D's specific silicon can do AF-C. The X2D's image processor and
+Fujifilm's are different parts, and the 3.3 fps vs 8 fps burst-rate gap suggests Fujifilm
+allocated more pipeline budget. But the GFX 100 II eliminates the simplest possible
+deflection — *"medium format at 100 MP just can't do AF-C"* — from the conversation.
+Whatever the binding constraint on the X2D 100C turns out to be, it is not the format and
+it is not the resolution.
+
+**The remaining open question** is whether the X2D's specific image processor pipeline has
+the throughput to do AF-C at all. The strongest external evidence that pipeline throughput,
+not AF detection capability, may be the binding constraint is the burst rate:
 
 The X2D's 3.3 fps burst rate is several times slower than full-frame mirrorless competitors
 with comparable PDAF + CDAF systems — entirely consistent with a sensor-readout / ISP
