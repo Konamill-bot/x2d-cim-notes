@@ -317,6 +317,7 @@ class X2D_GhostTest
 
     static string Send(NamedPipeClientStream pipe, string plist)
     {
+        const int READ_TIMEOUT_MS = 5000;
         try
         {
             byte[] data = Encoding.UTF8.GetBytes(plist);
@@ -325,13 +326,29 @@ class X2D_GhostTest
             pipe.Write(data, 0, data.Length);
             pipe.Flush();
 
+            // Read with timeout — async pattern because NamedPipeClientStream
+            // has no built-in synchronous read timeout on this framework.
             byte[] rlen = new byte[4];
-            if (pipe.Read(rlen, 0, 4) < 4) return "";
+            var ar = pipe.BeginRead(rlen, 0, 4, null, null);
+            if (!ar.AsyncWaitHandle.WaitOne(READ_TIMEOUT_MS))
+            {
+                return "(read timeout — Phocus did not respond within " + READ_TIMEOUT_MS + "ms)";
+            }
+            int got4 = pipe.EndRead(ar);
+            if (got4 < 4) return "(short header read, got " + got4 + " bytes)";
             int rsize = BitConverter.ToInt32(rlen, 0);
             if (rsize <= 0 || rsize > 1024 * 1024) return "(bad len " + rsize + ")";
             byte[] rbuf = new byte[rsize];
             int got = 0;
-            while (got < rsize) { int n = pipe.Read(rbuf, got, rsize-got); if (n==0) break; got += n; }
+            while (got < rsize)
+            {
+                var ar2 = pipe.BeginRead(rbuf, got, rsize - got, null, null);
+                if (!ar2.AsyncWaitHandle.WaitOne(READ_TIMEOUT_MS))
+                    return "(read timeout mid-body, got " + got + "/" + rsize + " bytes)";
+                int n = pipe.EndRead(ar2);
+                if (n == 0) break;
+                got += n;
+            }
             return Encoding.UTF8.GetString(rbuf, 0, got);
         }
         catch (Exception ex) { return "(err: " + ex.Message + ")"; }
