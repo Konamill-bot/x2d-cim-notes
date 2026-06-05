@@ -203,7 +203,7 @@ class X2D_GhostTest
         NamedPipeClientStream pipe = null;
         try
         {
-            pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut);
+            pipe = new NamedPipeClientStream(".", PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
             Console.Write("[Phase " + phaseLabel + "] Connecting to pipe...");
             pipe.Connect(5000);
             Console.WriteLine(" connected");
