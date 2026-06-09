@@ -1,29 +1,37 @@
-# Phocus 3.8.5 vs Phocus 3.8.8 — AF-C infrastructure was already in place
+# Phocus 3.8.5 vs Phocus 3.8.8 — AF-C symbol presence across versions
 
 Hasselblad released **Phocus 3.8.8** alongside / shortly after the X2D II 100C launch. That
 version is the first to officially expose AF-C in the X2D II's tethered workflow. A natural
-question is: **did Phocus's AF-C code path appear in 3.8.8, or was it already there in earlier
-versions?** If it was already there before the X2D II launched, then the PC-side software
-infrastructure for AF-C has been ready for some time and the binding constraint on AF-C
-delivery is not at the PC layer.
+question is: **did Phocus's AF-C symbols appear in 3.8.8, or were they already present in
+earlier versions?** If they were already present before the X2D II launched, the Phocus
+codebase had architectural support for AF-C earlier than the X2D II launch and the binding
+constraint on AF-C delivery is at minimum not "Phocus needs new declarations written from
+scratch."
 
 This note documents a direct binary comparison of **Phocus 3.8.5** (a pre-X2D II release,
-verified by absence of any X2D II identifier strings) and **Phocus 3.8.8** (the current X2D II-
-aware release).
+verified by absence of any X2D II identifier strings) and **Phocus 3.8.8** (the current
+X2D II-aware release).
+
+It is important up front to be precise about what this kind of comparison can and cannot
+show. See [Epistemic limits](#epistemic-limits) at the end.
 
 ## How the comparison was done
 
 For each version of `Phocus.dll` and `PhocusApi64.dll`:
 
 - Load `Phocus.dll` via .NET reflection (`Phocus.Native` namespace)
-- Enumerate `Phocus.Native.eFocusMode` to dump the enum values defined
+- Enumerate `Phocus.Native.eFocusMode` to dump the enum values defined in that build
 - ASCII-string-grep `PhocusApi64.dll` for: AF-C mode codes, IPC command names,
   SWIG-bound camera-controller methods, capability-structure field names, firmware-module
   identifiers
-- Compare what's present in 3.8.5 versus 3.8.8
+- Compare what is present in 3.8.5 versus 3.8.8
 
 Both binaries were installed and inspected on the same machine, with no firmware files,
 licence keys, or copyrighted resources copied out of the installations.
+
+**This is a binary-symbol analysis, not a behavioural test.** It tells us what names and
+declarations are present in the shipped DLLs. It does not tell us what those declarations
+do at runtime.
 
 ## Findings
 
@@ -33,11 +41,10 @@ licence keys, or copyrighted resources copied out of the installations.
   is absent from `PhocusApi64.dll` in 3.8.5.
 - `HASSLX29.CIM` (the X2D 100C firmware module identifier) is present in both.
 
-This confirms Phocus 3.8.5 was built before X2D II support was wired in. Any AF-C
-infrastructure observed in 3.8.5 must therefore have existed for reasons unrelated to
-the X2D II launch.
+This confirms Phocus 3.8.5 was built before X2D II support was wired in. Any AF-C symbols
+observed in 3.8.5 therefore predate the X2D II launch.
 
-### AF-C code path is complete in 3.8.5
+### AF-C-related symbols are present in 3.8.5
 
 | Element                                                | 3.8.5 | 3.8.8 |
 | ------------------------------------------------------ | ----- | ----- |
@@ -54,13 +61,12 @@ the X2D II launch.
 | `EnableFocusModeControl` / `ControlFocusModes`         | ✅     | ✅     |
 | `ClientSupportedFocusMode`                             | ✅     | ✅     |
 
-In other words: every part of the AF-C plumbing that we have previously documented as
-existing in 3.8.8 is **also** present in 3.8.5. The pre-X2D-II version of Phocus already
-had the complete infrastructure to: define an AF-C mode value, send the corresponding wire
-code (`AfC9`), receive an AF-C mode in the supported-modes list, query the camera's
-focus-mode-range capability bitmask, and write the mode back to the camera.
+Every element of the AF-C-related interface surface that exists in 3.8.8 is **also**
+declared in 3.8.5: enum slot, wire-protocol string, IPC command name, SWIG binding,
+capability-field accessor. The interface surface for AF-C in Phocus pre-dates the X2D II
+launch.
 
-### Phocus's eFocusMode enum has always reserved value 2 for AF-C
+### Phocus's eFocusMode enum has long reserved value 2 for AF-C
 
 The four real mode values defined by `Phocus.Native.eFocusMode` are:
 
@@ -73,51 +79,93 @@ kTrueFocusMode          = 3
 
 `kTrueFocusMode = 3` is the dedicated Hasselblad TrueFocus mode used on the H-series
 medium format bodies. `kAutoContinousFocusMode = 2` is distinct from TrueFocus and is the
-generic continuous AF mode used by every modern mirrorless camera.
+generic continuous AF mode value.
 
-Phocus has thus reserved enum value 2 for ordinary continuous AF for **years** without
-any Hasselblad camera body actually exposing it — until the X2D II in 2025.
+The presence of enum value 2 in 3.8.5, without any X2D II identifier in that same build,
+means Hasselblad's Phocus codebase has had this enum slot reserved at least since 3.8.5.
 
 ## Interpretation
 
-What this evidence supports:
+### What this evidence shows
 
-- **The Phocus PC-side software has been ready to drive AF-C for some time.** The
-  client / IPC / wire-protocol / SWIG-binding layers were all in place at least as early
-  as version 3.8.5 of Phocus, before any Hasselblad camera exposed AF-C in its product UI.
+The AF-C *interface surface* in Phocus pre-dates the X2D II launch. The enum slot exists,
+the IPC command name exists, the SWIG bindings to set/get focus mode exist, the wire
+protocol code `AfC9` exists as a string in the shipped binary, and the capability-field
+accessors exist on both `sCameraInterface` and `sControlCapabilities`.
 
-- **No major Phocus update is required to use AF-C on the X2D 100C body.** From the
-  PC software's perspective, all that needs to change is the camera body's
-  `focusModeRange` bitmask returning a value that includes bit 2.
+### What this evidence does NOT show
 
-What this evidence does **not** prove:
+**That the C++ implementation behind these declared interfaces is functional in 3.8.5.**
+Symbol presence in a binary is consistent with multiple realities:
 
-- It does **not** prove the X2D 100C's silicon can run a usable AF-C implementation
-  at acceptable refresh rates. The camera's image processor, sensor readout pipeline,
-  and AF firmware all have to be capable, and we have no visibility into those.
+1. The code works end-to-end — when the camera reports AF-C as supported and the client
+   issues `SetFocusMode(2)`, the camera actually changes mode.
+2. The code is present and routed but gated, returning success without effect (a soft stub).
+3. The code is a hard stub returning a status without doing anything.
+4. The symbol exists because it is declared in a shared C++/SWIG header that is
+   compiled into many Hasselblad camera SDK products. The Phocus binary contains the
+   declaration but no Hasselblad camera body has ever wired the implementation to
+   anything meaningful.
+5. The code is dead — referenced from nothing, retained because nobody pruned it.
 
-- It does **not** prove Hasselblad's intent behind keeping AF-C disabled on the X2D 100C.
-  The PC-side AF-C code may exist for a number of legitimate engineering reasons,
-  including: long-term roadmap planning across multiple camera generations, code sharing
-  with industrial / scientific Hasselblad imaging products, or simply that the same
-  underlying camera SDK is reused across products with different capability bitmasks.
+A binary-symbol scan cannot distinguish these. Distinguishing them requires connecting
+a real camera to Phocus 3.8.5 and observing IPC behaviour, motor activity, and screen
+state directly. That test is planned but had not been performed at the time of writing.
 
-- It does **not** confirm or deny that an X2D 100C firmware update could enable a
-  Hasselblad-quality AF-C experience. The architectural-vs-policy question that the
-  README opens with remains an internal Hasselblad question.
+### What this evidence does NOT prove about the X2D 100C's silicon
 
-What this evidence does **shift**:
+This study makes no claim about whether the X2D 100C's image processor, sensor readout
+pipeline, or AF firmware can deliver a Hasselblad-quality AF-C experience. The silicon
+question is independent of the Phocus codebase question.
 
-It shifts weight away from the strongest version of the *silicon-cannot* interpretation —
-the version that would assume Phocus's AF-C code was *added* alongside the X2D II as
-new capability. That version is contradicted: the code was already present in 3.8.5, well
-before X2D II existed. Whatever the binding constraint on AF-C delivery for the X2D 100C
-turns out to be, the binding constraint is not "Phocus is not ready."
+### The minimum claim the evidence supports
+
+Enabling AF-C on the X2D 100C does not require Hasselblad to write the Phocus-side
+declarations from scratch. The enum slot, the IPC command name, the SWIG bindings, and
+the capability-field accessors are already present in the shipped Phocus codebase and
+have been since at least 3.8.5. Whether anything behind those declarations is
+functional is a separate question that this analysis cannot answer.
+
+## What would falsify or strengthen this study
+
+The straightforward test:
+
+1. Start Phocus 3.8.5 with an X2D connected and tethered.
+2. Send `ipcFocusMode` with `Value="2"` over the named pipe.
+3. Observe the IPCReply code and the camera screen.
+
+Possible outcomes and what they would mean:
+
+- **IPCReply = 0** and camera screen does not change → 3.8.5 IPC accepts the command (the
+  code path is at least routed to *something*); the camera body is what declines. This
+  would match what was observed earlier in 3.8.8 and would suggest the Phocus-side AF-C
+  code path is at least non-trivial.
+- **IPCReply = `kIPCUnknownCommand` or similar error** → 3.8.5 has the strings in the
+  binary but no IPC dispatcher entry. The AF-C symbols would then be evidence of
+  declarations only, not of working code.
+- **IPCReply = 0** and camera screen *changes* → the camera body in this firmware
+  combination *does* honour AF-C requests, which would change the entire framing of
+  this investigation. (Considered unlikely based on direct observation of 3.8.8
+  behaviour, but the test is still worth running.)
+
+This note will be updated when the IPC test has been run.
+
+## Epistemic limits
+
+This is a string-and-reflection analysis of two specific Phocus releases. It is suitable
+for answering questions about *what is present in the binary*. It is not suitable for
+answering questions about *what those present things do at runtime*. Several of the
+strongest possible interpretations of this evidence have been deliberately not made above,
+because they go beyond what binary inspection can support.
+
+Readers who want a stronger claim than "AF-C interface declarations exist in 3.8.5"
+should wait for the IPC test described in the previous section to be run, or run it
+themselves.
 
 ## Cross-check method, for future researchers
 
 Any reader with `Phocus 3.8.5` and `Phocus 3.8.8` (or any other pair of versions) can
-reproduce the table above without privileged tooling:
+reproduce the symbol table above without privileged tooling:
 
 ```powershell
 # Enum dump
