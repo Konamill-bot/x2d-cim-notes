@@ -148,7 +148,79 @@ Possible outcomes and what they would mean:
   this investigation. (Considered unlikely based on direct observation of 3.8.8
   behaviour, but the test is still worth running.)
 
-This note will be updated when the IPC test has been run.
+## IPC test result (2026-06-10)
+
+Test performed: USB-tethered X2D 100C (firmware 4.2.0) with Phocus 3.8.5
+(installed at `E:\Hasselblad\Phocus 3.8.5`, build version 3.8.5.0).
+The test client mirrors the existing `x2d_afc_ipc_test.cs` design, with the
+constructor path repointed at the 3.8.5 install. The client opens the named
+pipe `\\.\pipe\Phocus-7DAF5ECD-9ADE-49f4-8B7C-59183189FD68` and exchanges plist XML
+messages.
+
+Sequence executed and observed responses:
+
+| Step | Command sent                  | IPCReply        | TextReply | Size  |
+| ---- | ----------------------------- | --------------- | --------- | ----- |
+| 1    | `ipcInitFromPreferences`      | `-2133196793`   | (empty)   | 223 B |
+| 2    | `ipcFocusMode` (read)         | `-2133196794`   | (empty)   | 223 B |
+| 3    | `ipcFocusMode` (Value=`"2"`)  | `-2133196793`   | (empty)   | 223 B |
+| 4    | `ipcFocusMode` (read again)   | **`0`**         | **`单次`**| variable |
+| 5    | `ipcFocusMode` (Value=`"1"`)  | `-2133196793`   | (empty)   | 223 B |
+
+**Direct observation: the X2D camera screen showed no change at any point during the
+test. The focus mode indicator remained at AFS / 單次 (single).**
+
+What changes in our knowledge as a result:
+
+1. **Step 4 supplies the strongest single piece of evidence in this note.**
+   `ipcFocusMode` (read) on Phocus 3.8.5 returned `IPCReply = 0` with `TextReply = "单次"`
+   — the Chinese-localised name for AFS / single AF mode. This is real data, not an
+   error template. It demonstrates that Phocus 3.8.5's IPC dispatcher routes
+   `ipcFocusMode` read requests to a functional handler that queries the actual camera
+   focus-mode state and returns it as a localised string to the IPC client.
+
+   This upgrades the earlier symbol-level claim. The reading path of `ipcFocusMode` in
+   Phocus 3.8.5 is not a stub, not dead code, and not an unwired SDK declaration. It is
+   a working handler.
+
+2. **Step 3 (the AF-C set) was rejected at the IPC protocol layer** with
+   `-2133196793`. This is the same status code returned by `ipcInitFromPreferences` and
+   `ipcFocusMode` (Value=1, the restore), and matches the behaviour observed in 3.8.8
+   from an external (non-Phocus-internal) client.
+
+   The X2D camera screen did not change. This is consistent with the SET command being
+   blocked at the IPC layer before reaching the camera relay path. It does not tell us
+   whether the SET handler in Phocus 3.8.5, if reached by an authorised internal client,
+   would in turn relay the command to the camera — that question remains open.
+
+3. **Steps 1, 2, 3, 5 returning error codes alongside Step 4 returning real data** is
+   the same alternating-error / occasional-success pattern previously observed against
+   Phocus 3.8.8 by external clients. The IPC layer evidently has a session-warming
+   pattern that admits some commands after others have run, but does not admit
+   external-client SET requests under any sequence we have tested.
+
+4. **The behavioural pattern observed against Phocus 3.8.5 is indistinguishable from
+   the pattern observed against Phocus 3.8.8 to the external client.** No version-
+   specific difference in IPC response was observed in this single run. This is
+   consistent with the cross-version symbol comparison: both versions have the same
+   AF-C interface surface, and from outside they exhibit the same IPC behaviour.
+
+What remains unanswered (and unanswerable from an external client):
+
+- Whether the SET handler behind `ipcFocusMode` (Value=2) in Phocus 3.8.5 would actually
+  relay AF-C to the X2D body if invoked from an authorised client inside the Phocus
+  process. The IPC protocol layer refuses the external SET before it reaches the
+  handler, so this layer cannot be observed externally.
+- Whether the camera body's `focusModeRange` bitmask would change in response to the
+  command even if the handler did relay it. Direct observation says it did not, but
+  that is consistent with both "Phocus did not relay" and "Phocus relayed and the
+  camera declined."
+
+The minimum claim of this note is now strengthened: enabling AF-C on the X2D 100C does
+not require Hasselblad to write the Phocus-side declarations *or* to wire up at least
+the READ-side dispatcher for AF-related IPC commands. Both already exist in 3.8.5. The
+write-side dispatcher remains unverifiable from outside, and the camera's response
+remains gated by `focusModeRange`.
 
 ## Epistemic limits
 
