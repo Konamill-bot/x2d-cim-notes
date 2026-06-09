@@ -107,6 +107,21 @@ This is genuinely the most important open question. Customers outside Hasselblad
 it without access to the camera's image processor specifications, which Hasselblad has not
 published. The right party to clarify is Hasselblad themselves.
 
+### Note on Phocus's AF-C readiness across versions
+
+A subsequent comparison of **Phocus 3.8.5** (a pre-X2D II release) and **Phocus 3.8.8** (the
+first X2D II-aware release) found that *the entire PC-side AF-C plumbing already existed in
+3.8.5*: the `kAutoContinousFocusMode = 2` enum value, the `AfC9` wire-protocol code, the
+`ipcFocusMode` / `ipcFocusModeList` IPC commands, the `GetSelectableFocusModes()` and
+`SetFocusMode()` SWIG bindings, the `focusModeRange` capability field on `sCameraInterface`
+and `sControlCapabilities`. Phocus 3.8.5 does **not** know about the X2D II (no `HASSLX30`
+identifier), so this infrastructure cannot have been added for the X2D II.
+
+This does not prove what the X2D 100C's silicon can or cannot do, but it does shift weight
+away from the strongest *silicon-cannot* interpretation. The PC-side software has been ready
+to drive AF-C for at least one major release before any Hasselblad camera body exposed it.
+Full evidence and cross-check method: [notes/phocus_3_8_5_vs_3_8_8.md](notes/phocus_3_8_5_vs_3_8_8.md).
+
 ## What was tested
 
 ### 1. Phocus IPC layer
@@ -221,9 +236,11 @@ appropriate for a premium camera platform, and this repo is closed on the techni
 ├── README.md
 ├── LICENSE
 ├── notes/
-│   ├── cim_header_format.md   # CIM format details
-│   ├── phocus_ipc_protocol.md # IPC command reference
-│   └── memory_scan_results.md # Phocus process memory analysis
+│   ├── cim_header_format.md       # CIM format details
+│   ├── phocus_ipc_protocol.md     # IPC command reference
+│   ├── memory_scan_results.md     # Phocus process memory analysis
+│   ├── network_observations.md    # WiFi endpoint port-scan findings
+│   └── phocus_3_8_5_vs_3_8_8.md   # AF-C plumbing already present in 3.8.5
 └── tools/                     # Diagnostic tool source code (no keys, no decryption)
     ├── cim_dji_key_test.py
     ├── phocus_memdump.cs
